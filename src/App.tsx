@@ -16,6 +16,7 @@ import CoursesListing from "./pages/CoursesListing";
 import CourseDetails from "./pages/CourseDetails";
 import ContentLibrary from "./pages/ContentLibrary";
 import Recommendations from "./pages/Recommendations";
+import SectionListing from "./pages/SectionListing";
 import NotFound from "./pages/NotFound";
 
 // Admin
@@ -44,6 +45,7 @@ const App = () => (
           <Route path="/tools" element={<Directory />} />
           <Route path="/tool/:handle" element={<ToolDetails />} />
           <Route path="/paths" element={<Paths />} />
+          <Route path="/paths/:slug" element={<PathDetails />} />
           <Route path="/paths/:slug/lesson/:lessonId" element={<LessonView />} />
           <Route path="/courses" element={<CoursesListing />} />
           <Route path="/courses/:id" element={<CourseDetails />} />
@@ -53,6 +55,7 @@ const App = () => (
           <Route path="/content" element={<ContentLibrary />} />
           <Route path="/quiz" element={<Quiz />} />
           <Route path="/recommendations" element={<Recommendations />} />
+          <Route path="/section/:id" element={<SectionListing />} />
           
           {/* Admin Routes */}
           <Route path="/admin" element={<AdminLayout />}>

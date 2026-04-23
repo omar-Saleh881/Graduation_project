@@ -158,21 +158,55 @@ const ManageArticles = () => {
                    <div className="aspect-video rounded-2xl bg-muted border-2 border-dashed border-border flex flex-col items-center justify-center overflow-hidden group relative">
                       {formData.cover_image ? (
                         <>
-                          <img src={formData.cover_image} alt="Preview" className="w-full h-full object-cover transition-transform group-hover:scale-105" />
-                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                             <Button variant="secondary" size="sm" onClick={() => setFormData({...formData, cover_image: ""})} className="h-8 gap-1">
-                                حذف <Trash2 className="h-3 w-3" />
+                          <img 
+                            src={formData.cover_image} 
+                            alt="Cover Preview" 
+                            className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = "https://placehold.co/600x400?text=Invalid+Image+URL";
+                            }}
+                          />
+                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                             <Button variant="secondary" size="sm" onClick={() => (document.getElementById('cover-image-picker') as HTMLInputElement)?.click()} className="h-8 gap-1">
+                                <ImageIcon className="h-3 w-3" /> تغيير
+                             </Button>
+                             <Button variant="destructive" size="sm" onClick={() => setFormData({...formData, cover_image: ""})} className="h-8 gap-1">
+                                <Trash2 className="h-3 w-3" /> حذف
                              </Button>
                           </div>
                         </>
                       ) : (
-                        <div className="flex flex-col items-center text-muted-foreground/40">
+                        <div className="flex flex-col items-center text-muted-foreground/40 cursor-pointer w-full h-full justify-center hover:bg-muted/50 transition-colors" onClick={() => (document.getElementById('cover-image-picker') as HTMLInputElement)?.click()}>
                           <ImageIcon className="h-10 w-10 mb-2" />
-                          <span className="text-[10px] font-bold uppercase">No Preview</span>
+                          <span className="text-[10px] font-bold uppercase">اضغط لرفع غلاف أو ضع رابطاً</span>
                         </div>
                       )}
                    </div>
-                   <Input value={formData.cover_image} onChange={e => setFormData({...formData, cover_image: e.target.value})} placeholder="ضع رابط الصورة هنا (URL)..." className="text-left ltr" dir="ltr" />
+                   <div className="flex gap-2">
+                      <Input 
+                        value={formData.cover_image} 
+                        onChange={e => setFormData({...formData, cover_image: e.target.value})} 
+                        placeholder="رابط الصورة (URL) هنا..." 
+                        className="text-left ltr flex-1" 
+                        dir="ltr" 
+                      />
+                      <Button variant="outline" size="icon" className="shrink-0 h-10 w-10" onClick={() => (document.getElementById('cover-image-picker') as HTMLInputElement)?.click()}>
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                      <input 
+                        type="file" 
+                        id="cover-image-picker" 
+                        className="hidden" 
+                        accept="image/*" 
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const url = URL.createObjectURL(file);
+                            setFormData({...formData, cover_image: url});
+                          }
+                        }}
+                      />
+                   </div>
                 </div>
 
                 <div className="space-y-4 pt-4 border-t border-border/50">

@@ -8,7 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { ArrowLeft, ArrowRight, Sparkles, RotateCcw } from "lucide-react";
-import { externalSupabase } from "@/lib/external-supabase";
+import { toolsRepo } from "@/lib/data/repository";
 import type { Tool } from "@/types/tool";
 
 interface Question {
@@ -188,21 +188,16 @@ const Quiz = () => {
     setAnswers((prev) => ({ ...prev, [currentQuestion.id]: value }));
   };
 
-  const handleNext = async () => {
+  const handleNext = () => {
     if (step < questions.length - 1) {
       setStep(step + 1);
     } else {
       // Compute results
       setLoading(true);
       try {
-        const { data, error } = await externalSupabase
-          .from("mbx")
-          .select("*")
-          .eq("is_active", true)
-          .eq("status", "published");
-
-        if (error) throw error;
-        const tools = (data ?? []) as Tool[];
+        const tools = toolsRepo.getAll().filter(
+          (t) => t.is_active && t.status === "published"
+        );
         const scored = tools
           .map((t) => scoreTool(t, answers))
           .filter((s) => s.score > 0)

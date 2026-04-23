@@ -1,10 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, Outlet, useLocation } from "react-router-dom";
 import { 
   LayoutDashboard, Wrench, FileText, Library, GraduationCap, 
-  Settings, Menu, X, Globe, Sparkles, LogOut, Search, ExternalLink, BookOpen, Map, LayoutPanelLeft
+  Settings, Menu, X, Globe, Sparkles, LogOut, Search, ExternalLink, BookOpen, Map, LayoutPanelLeft, Box
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { sectionsRepo } from "@/lib/data/repository";
+import { PlatformSection } from "@/types/platform-section";
 
 const sidebarLinks = [
   { to: "/admin", icon: LayoutDashboard, label: "نظرة عامة" },
@@ -17,9 +19,41 @@ const sidebarLinks = [
   { to: "/admin/settings", icon: Settings, label: "إعدادات المنصة" },
 ];
 
+// Resolves a route for a standalone module based on its content_type
+const getModuleRoute = (section: PlatformSection) => {
+  switch (section.content_type) {
+    case 'courses': return `/admin/sections/${section.id}/manage-courses`;
+    case 'paths': return `/admin/sections/${section.id}/manage-paths`;
+    case 'articles': return `/admin/sections/${section.id}/manage-articles`;
+    case 'tools': return `/admin/sections/${section.id}/manage-tools`;
+    default: return `/admin/sections/${section.id}/manage-content`;
+  }
+};
+
 const AdminLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
+  const [dynamicLinks, setDynamicLinks] = useState<{ to: string, icon: any, label: string }[]>([]);
+
+  useEffect(() => {
+    // Load module_mode custom sections to render in sidebar
+    const loadModules = () => {
+      const activeModules = sectionsRepo.getAll()
+        .filter(s => s.module_mode === true && s.is_active !== false)
+        .sort((a, b) => a.order - b.order);
+      
+      setDynamicLinks(activeModules.map(s => ({
+        to: getModuleRoute(s),
+        icon: Box, // Using standard Box icon for dynamic modules, or s.icon if we build a mapping
+        label: s.title_ar
+      })));
+    };
+    
+    loadModules();
+    // In a real app we might subscribe to changes. Assuming a page refresh or remount is fine for now.
+  }, []);
+
+  const allLinks = [...sidebarLinks, ...dynamicLinks];
 
   return (
     <div className="flex h-screen bg-muted/20 overflow-hidden">

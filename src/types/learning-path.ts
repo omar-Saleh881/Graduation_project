@@ -10,6 +10,7 @@ export interface LearningPath {
   is_published: boolean;
   steps_count: number;
   created_at: string;
+  section_id?: string;
 }
 
 export interface PathCourse {
@@ -27,7 +28,7 @@ export interface PathStep {
   step_order: number;
   title_ar: string;
   description_ar: string;
-  resource_type: 'lesson' | 'article' | 'video' | 'tool' | 'exercise' | 'quiz' | 'external';
+  resource_type: 'lesson' | 'article' | 'video' | 'tool' | 'exercise' | 'quiz' | 'external' | 'document';
   resource_url: string;
   youtube_url?: string;
   external_url?: string;

@@ -9,6 +9,7 @@ export interface Tool {
   summary_ar: string;
   category: string;
   tags: string[];
+  section_id?: string;
   pricing_model: string;
   target_audience: string;
   difficulty_level: number;

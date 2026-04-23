@@ -141,24 +141,32 @@ const PathDetails = () => {
                           </div>
                           
                           <div className="sm:shrink-0 flex items-center justify-end mt-2 sm:mt-0">
-                            {step.resource_type === 'lesson' || step.content_ar ? (
+                            {/* Improved routing and rendering for all item types */}
+                            {['lesson', 'video', 'document', 'quiz'].includes(step.resource_type) ? (
                               <Link to={`/paths/${path.slug}/lesson/${step.id}`}>
                                 <Button size="sm" className="gap-1.5 w-full sm:w-auto">
-                                  ابدأ الدرس
+                                  {step.resource_type === 'quiz' ? 'ابدأ الاختبار' : step.resource_type === 'document' ? 'عرض المستند' : step.resource_type === 'video' ? 'شاهد الفيديو' : 'ابدأ الدرس'}
                                   <ArrowRight className="h-3.5 w-3.5" />
                                 </Button>
                               </Link>
                             ) : step.resource_type === 'tool' ? (
-                              <Link to={step.resource_url}>
+                              <a href={step.resource_url} target="_blank" rel="noopener noreferrer">
                                 <Button variant="outline" size="sm" className="gap-1.5 w-full sm:w-auto">
                                   الذهاب للأداة
                                   <ArrowRight className="h-3.5 w-3.5" />
                                 </Button>
+                              </a>
+                            ) : step.resource_type === 'article' ? (
+                              <Link to={step.resource_url}>
+                                <Button variant="outline" size="sm" className="gap-1.5 w-full sm:w-auto">
+                                  اقرأ المقال
+                                  <ArrowRight className="h-3.5 w-3.5" />
+                                </Button>
                               </Link>
-                            ) : step.resource_url && step.resource_url !== "#" ? (
+                            ) : step.resource_type === 'external' && step.resource_url ? (
                               <a href={step.resource_url} target="_blank" rel="noopener noreferrer">
                                 <Button variant="outline" size="sm" className="gap-1.5 w-full sm:w-auto">
-                                  افتح
+                                  افتح المصدر الخارجي
                                   <ExternalLink className="h-3.5 w-3.5" />
                                 </Button>
                               </a>

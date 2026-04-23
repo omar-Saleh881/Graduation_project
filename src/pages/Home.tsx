@@ -3,18 +3,122 @@ import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { settingsRepo, sectionsRepo } from "@/lib/data/repository";
+import { settingsRepo, sectionsRepo, getSectionItems, getSectionCtaLink } from "@/lib/data/repository";
+import { PlatformSection } from "@/types/platform-section";
 import {
   Sparkles, Search, GraduationCap, FileText, Library, MessageCircleQuestion,
   ArrowLeft, Target, Rocket, Users, BookOpen, CheckCircle2,
-  Zap, Shield, Globe, TrendingUp, Star, ChevronLeft, Lightbulb
+  Zap, Shield, Globe, TrendingUp, Star, ChevronLeft, Lightbulb, PackageOpen
 } from "lucide-react";
 
 /* ═══════════════════════════════════════════════════════════════
    HOME — Premium Arabic Landing Page (refined v2)
    Section IDs match Navbar's landingSections for smooth scrolling
    ═══════════════════════════════════════════════════════════════ */
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   DynamicSections — renders the admin-configured sections with real items
+   ───────────────────────────────────────────────────────────────────────────── */
+function DynamicSections() {
+  const [sections, setSections] = useState<PlatformSection[]>([]);
+  useEffect(() => {
+    setSections(
+      sectionsRepo.getAll().filter(s => s.is_active).sort((a, b) => a.order - b.order)
+    );
+  }, []);
+
+  if (sections.length === 0) return null;
+
+  return (
+    <section id="sections" className="py-20 md:py-24 bg-muted/30">
+      <div className="container mx-auto px-4">
+        <div className="text-center max-w-2xl mx-auto mb-12">
+          <span className="inline-block text-sm font-semibold text-accent tracking-wide bg-accent/5 rounded-full px-4 py-1 mb-3">
+            استكشف المنصة
+          </span>
+          <h2 className="text-3xl md:text-4xl font-bold text-foreground leading-tight">
+            أقسام المنصة الرئيسية
+          </h2>
+          <p className="mt-4 text-muted-foreground text-lg leading-relaxed">
+            كل قسم مصمّم ليقدّم لك تجربة تعليمية متكاملة
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {sections.map((section) => {
+            const previewItems = getSectionItems({ ...section, max_items: 3 });
+            const ctaLink = getSectionCtaLink(section);
+            return (
+              <Card
+                key={section.id}
+                className="group overflow-hidden border-border/50 transition-all duration-300 hover:shadow-xl hover:shadow-primary/5 hover:border-primary/30 flex flex-col"
+              >
+                <CardContent className="p-0 flex flex-col flex-1">
+                  {/* Header */}
+                  <div className="bg-gradient-to-br from-primary/5 to-primary/10 px-6 py-5 flex items-center gap-4">
+                    <span className="text-3xl group-hover:scale-110 transition-transform shrink-0">
+                      {section.icon || "✨"}
+                    </span>
+                    <div className="min-w-0">
+                      <h3 className="text-lg font-bold text-foreground leading-snug">{section.title_ar}</h3>
+                      <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{section.description_ar}</p>
+                    </div>
+                  </div>
+
+                  {/* Live preview items */}
+                  <div className="px-6 py-4 flex-1 space-y-2.5">
+                    {previewItems.length > 0 ? (
+                      previewItems.map(item => (
+                        <Link key={item.id} to={item.href} className="flex items-start gap-3 group/item hover:bg-muted/50 -mx-2 px-2 py-1.5 rounded-lg transition-colors">
+                          {item.icon && <span className="text-lg shrink-0">{item.icon}</span>}
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-foreground leading-snug line-clamp-1 group-hover/item:text-primary transition-colors">
+                              {item.title_ar}
+                            </p>
+                            {item.meta && (
+                              <p className="text-xs text-muted-foreground mt-0.5">{item.meta}</p>
+                            )}
+                          </div>
+                          {item.badge && (
+                            <Badge variant="outline" className="text-[10px] shrink-0 py-0">{item.badge}</Badge>
+                          )}
+                        </Link>
+                      ))
+                    ) : (
+                      <div className="flex flex-col items-center justify-center py-6 text-center">
+                        <PackageOpen className="h-8 w-8 text-muted-foreground/30 mb-2" />
+                        <p className="text-xs text-muted-foreground">
+                          {section.empty_state_text || "لا توجد عناصر حالياً"}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* CTA */}
+                  <div className="px-6 pb-5 pt-2 border-t border-border/40">
+                    <Link to={ctaLink}>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="gap-1.5 text-primary hover:text-primary hover:bg-primary/5 -mx-2 w-full justify-start font-medium"
+                      >
+                        {section.cta_text || "استكشف"}
+                        <ChevronLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1 mr-auto" />
+                      </Button>
+                    </Link>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 
 const Home = () => {
   const [settings, setSettings] = useState(() => settingsRepo.getById("global"));
@@ -145,50 +249,9 @@ const Home = () => {
         </section>
 
         {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-            § 1.5  PLATFORM SECTIONS — Dynamic from Admin
+            § 1.5  PLATFORM SECTIONS — Dynamic, content-aware
             ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
-        <section id="sections" className="py-20 md:py-24 bg-muted/30">
-          <div className="container mx-auto px-4">
-            <div className="text-center max-w-2xl mx-auto mb-12">
-              <span className="inline-block text-sm font-semibold text-accent tracking-wide bg-accent/5 rounded-full px-4 py-1 mb-3">استكشف المنصة</span>
-              <h2 className="text-3xl md:text-4xl font-bold text-foreground leading-tight">
-                أقسام المنصة الرئيسية
-              </h2>
-              <p className="mt-4 text-muted-foreground text-lg leading-relaxed">
-                كل قسم مصمّم ليقدّم لك تجربة تعليمية متكاملة
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {sectionsRepo.getAll().filter(s => s.is_active).sort((a,b) => a.order - b.order).map((section, i) => (
-                <Card
-                  key={section.id}
-                  className="group overflow-hidden border-border/50 transition-all duration-300 hover:shadow-xl hover:shadow-primary/5 hover:border-primary/30"
-                >
-                  <CardContent className="p-0">
-                    <div className="bg-gradient-to-br from-primary/5 to-primary/10 px-6 py-5 flex items-center gap-4">
-                      <span className="text-3xl group-hover:scale-110 transition-transform">{section.icon || "✨"}</span>
-                      <h3 className="text-lg font-bold text-foreground leading-snug">{section.title_ar}</h3>
-                    </div>
-                    <div className="px-6 py-5 space-y-4">
-                      <p className="text-sm text-muted-foreground leading-[1.7] line-clamp-2">{section.description_ar}</p>
-                      <Link to={section.cta_link || "/"}>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="gap-1.5 text-primary hover:text-primary hover:bg-primary/5 -mx-2 font-medium"
-                        >
-                          {section.cta_text || "استكشف"}
-                          <ChevronLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
-                        </Button>
-                      </Link>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
-        </section>
+        <DynamicSections />
 
         {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
             § 2  FEATURES — id="features"
