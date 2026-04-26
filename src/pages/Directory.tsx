@@ -22,7 +22,12 @@ const Directory = () => {
     page: Number(searchParams.get("page")) || 1,
   });
 
-  const { data, isLoading } = useTools(query);
+  const { data: rawData, isLoading } = useTools(query);
+
+  const data = rawData ? {
+    ...rawData,
+    tools: rawData.tools.filter((t: any) => !t.section_id)
+  } : undefined;
 
   const handleQueryChange = (partial: Partial<ToolsQuery>) => {
     const next = { ...query, ...partial };

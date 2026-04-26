@@ -23,7 +23,7 @@ import { Article, ArticleBlock, ArticleBlockType } from "@/types/article";
 import { Tool } from "@/types/tool";
 
 const PathBuilder = () => {
-  const { slug } = useParams<{ slug: string }>();
+  const { slug, sectionId } = useParams<{ slug: string, sectionId?: string }>();
   const { toast } = useToast();
   
   const [path, setPath] = useState<any>(null);
@@ -515,7 +515,7 @@ const PathBuilder = () => {
   return (
     <div className="space-y-6 max-w-5xl mx-auto pb-20">
       <div className="flex items-center gap-4 mb-8">
-        <Link to="/admin/paths">
+        <Link to={sectionId ? `/admin/sections/${sectionId}/manage-paths` : "/admin/paths"}>
           <Button variant="outline" size="icon" className="rounded-full h-10 w-10"><ArrowRight className="h-5 w-5" /></Button>
         </Link>
         <div>

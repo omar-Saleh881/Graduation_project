@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
 import { Plus, Search, Edit, Trash2 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -15,6 +16,7 @@ const ManageTools = () => {
   const [tools, setTools] = useState<Tool[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const { toast } = useToast();
+  const { sectionId } = useParams<{ sectionId?: string }>();
   const queryClient = useQueryClient();
   
   // Form state
@@ -25,14 +27,18 @@ const ManageTools = () => {
   });
 
   const loadTools = () => {
-    setTools(toolsRepo.getAll().sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
+    setTools(
+      toolsRepo.getAll()
+        .filter(t => sectionId ? t.section_id === sectionId : !t.section_id)
+        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+    );
     queryClient.invalidateQueries({ queryKey: ["tools"] });
     queryClient.invalidateQueries({ queryKey: ["tool"] });
   };
 
   useEffect(() => {
     loadTools();
-  }, []);
+  }, [sectionId]);
 
   const handleDelete = (id: string) => {
     if (window.confirm("هل أنت متأكد من حذف هذه الأداة؟")) {
@@ -80,7 +86,8 @@ const ManageTools = () => {
         votes_count: 0,
         is_active: formData.status === "published",
         created_at: new Date().toISOString(),
-        logo_url: ""
+        logo_url: "",
+        section_id: sectionId
       });
       toast({ title: "تمت الإضافة بنجاح" });
     }

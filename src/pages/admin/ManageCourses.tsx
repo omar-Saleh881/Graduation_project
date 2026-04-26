@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Plus, Edit, Trash2, ArrowLeft } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,12 +14,17 @@ export default function ManageCourses() {
   const [courses, setCourses] = useState<Course[]>([]);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { sectionId } = useParams<{ sectionId?: string }>();
   
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [formData, setFormData] = useState({ title_ar: "", category: "", description_ar: "" });
 
   const loadCourses = () => {
-    setCourses(coursesRepo.getAll().sort((a,b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
+    setCourses(
+      coursesRepo.getAll()
+        .filter(c => sectionId ? c.section_id === sectionId : !c.section_id) // If undefined, it will only match global courses!
+        .sort((a,b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+    );
   };
 
   useEffect(() => { loadCourses(); }, []);
@@ -33,12 +38,14 @@ export default function ManageCourses() {
       slug,
       level: "beginner",
       is_published: false,
-      created_at: new Date().toISOString()
+      created_at: new Date().toISOString(),
+      section_id: sectionId
     });
     toast({ title: "تم إنشاء الكورس بنجاح" });
     setIsDialogOpen(false);
     loadCourses();
-    navigate(`/admin/courses/${newCourse.id}/builder`);
+    const basePath = sectionId ? `/admin/sections/${sectionId}/courses` : `/admin/courses`;
+    navigate(`${basePath}/${newCourse.id}/builder`);
   };
 
   const handleDelete = (id: string) => {
@@ -93,7 +100,7 @@ export default function ManageCourses() {
                 <div className="flex gap-2">
                   <Button variant="outline" size="icon" onClick={() => handleDelete(course.id)} className="h-8 w-8 text-red-500 hover:bg-red-50"><Trash2 className="h-4 w-4" /></Button>
                 </div>
-                <Link to={`/admin/courses/${course.id}/builder`}>
+                <Link to={sectionId ? `/admin/sections/${sectionId}/courses/${course.id}/builder` : `/admin/courses/${course.id}/builder`}>
                   <Button size="sm" className="gap-2">افتح الباني <ArrowLeft className="h-3 w-3" /></Button>
                 </Link>
               </div>

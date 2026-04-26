@@ -14,7 +14,7 @@ const CoursesListing = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const data = coursesRepo.getAll().filter(c => c.is_published !== false);
+    const data = coursesRepo.getAll().filter(c => c.is_published !== false && !c.section_id);
     setCourses(data);
     setIsLoading(false);
   }, []);

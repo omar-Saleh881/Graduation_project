@@ -15,8 +15,13 @@ const Articles = () => {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState<string | undefined>(undefined);
   const [page, setPage] = useState(1);
-  const { data, isLoading } = useArticles({ search: search || undefined, category, page });
+  const { data: rawData, isLoading } = useArticles({ search: search || undefined, category, page });
   const { data: categories } = useArticleCategories();
+
+  const data = rawData ? {
+    ...rawData,
+    articles: rawData.articles.filter(a => !a.section_id)
+  } : undefined;
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();

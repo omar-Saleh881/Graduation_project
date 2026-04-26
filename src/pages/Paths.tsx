@@ -20,7 +20,8 @@ const levelColors: Record<string, string> = {
 };
 
 const Paths = () => {
-  const { data: paths, isLoading } = useLearningPaths();
+  const { data: allPaths, isLoading } = useLearningPaths();
+  const paths = allPaths?.filter((path) => !path.section_id);
 
   return (
     <div className="flex min-h-screen flex-col">

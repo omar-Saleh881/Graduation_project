@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { Plus, Search, Edit, Trash2, ArrowLeft } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,7 @@ const ManagePaths = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { sectionId } = useParams<{ sectionId?: string }>();
   
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -25,7 +26,11 @@ const ManagePaths = () => {
   });
 
   const loadPaths = () => {
-    setPaths(pathsRepo.getAll().sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
+    setPaths(
+      pathsRepo.getAll()
+        .filter(p => sectionId ? p.section_id === sectionId : !p.section_id)
+        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+    );
     queryClient.invalidateQueries({ queryKey: ["paths"] });
   };
 
@@ -72,7 +77,8 @@ const ManagePaths = () => {
         estimated_hours: 5,
         icon: "🎓",
         steps_count: 0,
-        created_at: new Date().toISOString()
+        created_at: new Date().toISOString(),
+        section_id: sectionId
       });
       toast({ title: "تمت الإضافة بنجاح" });
     }
@@ -189,7 +195,7 @@ const ManagePaths = () => {
                     </td>
                     <td className="px-6 py-4 text-left">
                       <div className="flex items-center justify-end gap-2">
-                        <Link to={`/admin/paths/${path.id}/builder`}>
+                        <Link to={sectionId ? `/admin/sections/${sectionId}/paths/${path.id}/builder` : `/admin/paths/${path.id}/builder`}>
                           <Button variant="outline" size="sm" className="gap-2 border-primary/50 text-primary">
                             الباني <ArrowLeft className="h-3 w-3" />
                           </Button>

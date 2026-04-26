@@ -68,6 +68,15 @@ const App = () => (
             <Route path="paths" element={<ManagePaths />} />
             <Route path="paths/:slug/builder" element={<PathBuilder />} />
             <Route path="sections" element={<ManagePlatformSections />} />
+            
+            {/* Dynamic Custom Standalone Modules Routes */}
+            <Route path="sections/:sectionId/manage-tools" element={<ManageTools />} />
+            <Route path="sections/:sectionId/manage-articles" element={<ManageArticles />} />
+            <Route path="sections/:sectionId/manage-courses" element={<ManageCourses />} />
+            <Route path="sections/:sectionId/courses/:id/builder" element={<CourseBuilder />} />
+            <Route path="sections/:sectionId/manage-paths" element={<ManagePaths />} />
+            <Route path="sections/:sectionId/paths/:slug/builder" element={<PathBuilder />} />
+            
             <Route path="settings" element={<AdminSettings />} />
           </Route>
 

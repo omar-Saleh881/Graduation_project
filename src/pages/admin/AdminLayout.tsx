@@ -67,7 +67,7 @@ const AdminLayout = () => {
         </div>
 
         <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-1">
-          {sidebarLinks.map((link) => {
+          {allLinks.map((link) => {
             const isActive = location.pathname === link.to;
             return (
               <Link key={link.to} to={link.to}>
@@ -125,7 +125,7 @@ const AdminLayout = () => {
         </div>
 
         <nav className="py-4 px-3 space-y-1">
-          {sidebarLinks.map((link) => {
+          {allLinks.map((link) => {
             const isActive = location.pathname === link.to;
             return (
               <Link key={link.to} to={link.to} onClick={() => setSidebarOpen(false)}>
@@ -160,7 +160,7 @@ const AdminLayout = () => {
             
             {/* Breadcrumb would go here dynamically, keeping it simple for now */}
             <h1 className="text-lg font-bold hidden sm:block">
-              {sidebarLinks.find(l => l.to === location.pathname)?.label || "لوحة الإدارة"}
+              {allLinks.find(l => l.to === location.pathname)?.label || "لوحة الإدارة"}
             </h1>
           </div>
 

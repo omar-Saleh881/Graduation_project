@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Plus, Search, Edit, Trash2, Image as ImageIcon, ExternalLink, User, Clock, CheckCircle2, AlertCircle, Save } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,6 +17,7 @@ const ManageArticles = () => {
   const [articles, setArticles] = useState<Article[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const { toast } = useToast();
+  const { sectionId } = useParams<{ sectionId?: string }>();
   const queryClient = useQueryClient();
   
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -33,13 +34,17 @@ const ManageArticles = () => {
   });
 
   const loadArticles = () => {
-    setArticles(articlesRepo.getAll().sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
+    setArticles(
+      articlesRepo.getAll()
+        .filter(a => sectionId ? a.section_id === sectionId : !a.section_id)
+        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+    );
     queryClient.invalidateQueries({ queryKey: ["articles"] });
   };
 
   useEffect(() => {
     loadArticles();
-  }, []);
+  }, [sectionId]);
 
   const handleDelete = (id: string) => {
     if (window.confirm("هل أنت متأكد من حذف هذا المقال بصورة نهائية؟")) {
@@ -68,9 +73,10 @@ const ManageArticles = () => {
         author_name: formData.author_name || "فريق المنصة",
         tags: [],
         published_at: new Date().toISOString(),
-        created_at: new Date().toISOString()
+        created_at: new Date().toISOString(),
+        section_id: sectionId
       } as any);
-      toast({ title: "تمت إضافة المقال بنجاح" });
+      toast({ title: "تم إنشاء المقال بنجاح" });
     }
     setIsDialogOpen(false);
     loadArticles();

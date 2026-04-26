@@ -17,7 +17,7 @@ import {
 import { CourseModule, Lesson } from "@/types/builder";
 
 export default function CourseBuilder() {
-  const { id } = useParams<{ id: string }>();
+  const { id, sectionId } = useParams<{ id: string, sectionId?: string }>();
   const { toast } = useToast();
   
   const [course, setCourse] = useState<any>(null);
@@ -147,7 +147,7 @@ export default function CourseBuilder() {
   return (
     <div className="space-y-6 max-w-5xl mx-auto pb-20">
       <div className="flex items-center gap-4 mb-8">
-        <Link to="/admin/courses">
+        <Link to={sectionId ? `/admin/sections/${sectionId}/manage-courses` : "/admin/courses"}>
           <Button variant="outline" size="icon" className="rounded-full h-10 w-10"><ArrowRight className="h-5 w-5" /></Button>
         </Link>
         <div>
