@@ -1,13 +1,9 @@
-export type SectionContentType =
+export type SectionTemplateType =
   | 'tools'
   | 'paths'
   | 'courses'
-  | 'articles'
-  | 'content'
-  | 'mixed'
-  | 'recommendations';
+  | 'articles';
 
-export type SectionPopulationMode = 'automatic' | 'manual';
 export type SectionDisplayStyle = 'grid' | 'list' | 'cards' | 'featured';
 
 export interface PlatformSection {
@@ -20,15 +16,11 @@ export interface PlatformSection {
   order: number;
   is_active: boolean;
   cta_text?: string;
-  cta_link?: string;         // if empty → auto-derived from content_type
+  cta_link?: string;         // if empty → auto-derived from template_type
 
   // ── Behavior ─────────────────────────────────────────────────────
-  content_type: SectionContentType;   // what kind of content lives here
-  population_mode: SectionPopulationMode; // 'automatic' | 'manual'
+  template_type: SectionTemplateType;     // what kind of content lives here
   display_style?: SectionDisplayStyle;    // how items render publicly
-
-  // ── Manual population ─────────────────────────────────────────────
-  linked_item_ids?: string[];  // IDs to show when population_mode='manual'
 
   // ── Optional caps / UX ───────────────────────────────────────────
   max_items?: number;          // max items to show publicly (default 6)

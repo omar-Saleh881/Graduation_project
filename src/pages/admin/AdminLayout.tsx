@@ -19,9 +19,9 @@ const sidebarLinks = [
   { to: "/admin/settings", icon: Settings, label: "إعدادات المنصة" },
 ];
 
-// Resolves a route for a standalone module based on its content_type
+// Resolves a route for a standalone module based on its template_type
 const getModuleRoute = (section: PlatformSection) => {
-  switch (section.content_type) {
+  switch (section.template_type) {
     case 'courses': return `/admin/sections/${section.id}/manage-courses`;
     case 'paths': return `/admin/sections/${section.id}/manage-paths`;
     case 'articles': return `/admin/sections/${section.id}/manage-articles`;

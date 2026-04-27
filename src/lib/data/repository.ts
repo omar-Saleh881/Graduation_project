@@ -4,7 +4,7 @@ import { Article } from "@/types/article";
 import { ContentResource } from "@/types/content";
 import { LearningPath, PathStep, PathCourse, LearningPathWithSteps } from "@/types/learning-path";
 import { Course, CourseModule, Lesson, PathStage, PathStageItem } from "@/types/builder";
-import { PlatformSection, SectionContentType } from "@/types/platform-section";
+import { PlatformSection, SectionTemplateType } from "@/types/platform-section";
 import { Domain } from "@/types/domain";
 
 const SECTIONS_KEY = "ai_platform_sections";
@@ -127,74 +127,43 @@ export const sectionsRepo = new LocalStorageRepository<PlatformSection>(SECTIONS
 // Default sections if empty
 if (sectionsRepo.getAll().length === 0) {
   sectionsRepo.create({
-    title_ar: "دليل الأدوات",
+    title_ar: "دليل الأدوات الذكية",
     description_ar: "أكبر دليل عربي لأدوات AI — ابحث، قارن، واختر من بين مئات الأدوات المُصنّفة.",
     icon: "🔍",
-    content_type: 'tools',
-    population_mode: 'automatic',
+    template_type: 'tools',
+    module_mode: false,
     display_style: 'grid',
     max_items: 6,
     order: 1,
     is_active: true,
     cta_text: "تصفّح الأدوات",
-    cta_link: "/tools",
     empty_state_text: "لا توجد أدوات منشورة حالياً"
   });
   sectionsRepo.create({
     title_ar: "المسارات التعليمية",
     description_ar: "مسارات مُنظّمة خطوة بخطوة تغطي الكتابة، التصميم، البرمجة، والتسويق.",
     icon: "📚",
-    content_type: 'paths',
-    population_mode: 'automatic',
+    template_type: 'paths',
+    module_mode: false,
     display_style: 'cards',
     max_items: 6,
     order: 2,
     is_active: true,
     cta_text: "ابدأ مسارك الأول",
-    cta_link: "/paths",
     empty_state_text: "لا توجد مسارات منشورة حالياً"
   });
   sectionsRepo.create({
     title_ar: "المقالات التعليمية",
     description_ar: "مقالات عربية مبسّطة تشرح المفاهيم والأدوات بأسلوب واضح وعملي.",
     icon: "📝",
-    content_type: 'articles',
-    population_mode: 'automatic',
+    template_type: 'articles',
+    module_mode: false,
     display_style: 'list',
     max_items: 6,
     order: 3,
     is_active: true,
     cta_text: "اقرأ أحدث المقالات",
-    cta_link: "/articles",
     empty_state_text: "لا توجد مقالات منشورة حالياً"
-  });
-  sectionsRepo.create({
-    title_ar: "مكتبة المحتوى",
-    description_ar: "مصادر مُنتقاة من أفضل المنصات العالمية — دورات، فيديوهات، وكتب.",
-    icon: "🗂️",
-    content_type: 'content',
-    population_mode: 'automatic',
-    display_style: 'grid',
-    max_items: 6,
-    order: 4,
-    is_active: true,
-    cta_text: "تصفّح المكتبة",
-    cta_link: "/content",
-    empty_state_text: "لا توجد موارد في المكتبة حالياً"
-  });
-  sectionsRepo.create({
-    title_ar: "مستشار الأدوات الذكي",
-    description_ar: "أجب عن 5 أسئلة فقط وسنقترح لك أفضل الأدوات بناءً على احتياجاتك.",
-    icon: "🎯",
-    content_type: 'recommendations',
-    population_mode: 'automatic',
-    display_style: 'featured',
-    max_items: 6,
-    order: 5,
-    is_active: true,
-    cta_text: "جرّب المستشار مجاناً",
-    cta_link: "/quiz",
-    empty_state_text: ""
   });
 }
 
@@ -448,100 +417,21 @@ export interface SectionItem {
   meta?: string;         // optional subtitle (e.g. read time, level)
 }
 
-export const DEFAULT_CTA_LINKS: Record<SectionContentType, string> = {
+export const DEFAULT_CTA_LINKS: Record<SectionTemplateType, string> = {
   tools: '/tools',
   paths: '/paths',
   courses: '/courses',
   articles: '/articles',
-  content: '/content',
-  recommendations: '/quiz',
-  mixed: '',             // handled per-section: /section/:id
 };
 
 export function getSectionCtaLink(section: PlatformSection): string {
   if (section.cta_link) return section.cta_link;
-  if (section.content_type === 'mixed') return `/section/${section.id}`;
-  return DEFAULT_CTA_LINKS[section.content_type] || '/';
+  return DEFAULT_CTA_LINKS[section.template_type] || '/';
 }
 
 export function getSectionItems(section: PlatformSection): SectionItem[] {
   const limit = section.max_items ?? 6;
-
-  // ── MANUAL mode: resolve linked_item_ids from all repos ──────────
-  if (section.population_mode === 'manual') {
-    const ids = section.linked_item_ids ?? [];
-    const results: SectionItem[] = [];
-
-    for (const id of ids) {
-      // Try tools
-      const tool = toolsRepo.getById(id);
-      if (tool) {
-        results.push({
-          id: tool.id,
-          title_ar: tool.name,
-          description_ar: tool.description_ar,
-          href: `/tool/${tool.handle || tool.id}`,
-          badge: 'أداة',
-        });
-        continue;
-      }
-      // Try articles
-      const article = articlesRepo.getById(id);
-      if (article) {
-        results.push({
-          id: article.id,
-          title_ar: article.title_ar,
-          description_ar: article.excerpt_ar,
-          href: `/article/${article.slug}`,
-          badge: 'مقال',
-          meta: article.read_time_minutes ? `${article.read_time_minutes} دقائق قراءة` : undefined,
-        });
-        continue;
-      }
-      // Try paths
-      const path = pathsRepo.getById(id);
-      if (path) {
-        results.push({
-          id: path.id,
-          title_ar: path.title_ar,
-          description_ar: path.description_ar,
-          icon: path.icon,
-          href: `/paths/${path.slug}`,
-          badge: 'مسار',
-        });
-        continue;
-      }
-      // Try courses
-      const course = coursesRepo.getById(id);
-      if (course) {
-        results.push({
-          id: course.id,
-          title_ar: course.title_ar,
-          description_ar: course.description_ar,
-          href: `/courses/${course.slug || course.id}`,
-          badge: 'كورس',
-          meta: course.level,
-        });
-        continue;
-      }
-      // Try content
-      const content = contentRepo.getById(id);
-      if (content) {
-        results.push({
-          id: content.id,
-          title_ar: content.title_ar,
-          description_ar: content.description_ar,
-          href: content.url || '#',
-          badge: 'محتوى',
-        });
-      }
-    }
-
-    return results.slice(0, limit);
-  }
-
-  // ── AUTOMATIC mode: fetch latest from the matching repo ──────────
-  const type = section.content_type;
+  const type = section.template_type;
   const isModule = section.module_mode === true;
 
   if (type === 'tools') {
@@ -597,34 +487,6 @@ export function getSectionItems(section: PlatformSection): SectionItem[] {
         badge: 'كورس',
         meta: c.level,
       }));
-  }
-
-  if (type === 'content') {
-    return contentRepo.getAll()
-      .slice(0, limit)
-      .map(c => ({
-        id: c.id,
-        title_ar: c.title_ar,
-        description_ar: c.description_ar,
-        href: c.url || '#',
-        badge: 'محتوى',
-      }));
-  }
-
-  if (type === 'mixed') {
-    // Auto-mixed: take from each repo equally
-    const perRepo = Math.max(1, Math.floor(limit / 4));
-    const mixed: SectionItem[] = [
-      ...toolsRepo.getAll().filter(t => t.is_active !== false).slice(0, perRepo)
-        .map(t => ({ id: t.id, title_ar: t.name, description_ar: t.description_ar, href: `/tool/${t.handle || t.id}`, badge: 'أداة' as const })),
-      ...articlesRepo.getAll().filter(a => a.is_published !== false).slice(0, perRepo)
-        .map(a => ({ id: a.id, title_ar: a.title_ar, description_ar: a.excerpt_ar, href: `/article/${a.slug}`, badge: 'مقال' as const })),
-      ...pathsRepo.getAll().filter(p => p.is_published !== false).slice(0, perRepo)
-        .map(p => ({ id: p.id, title_ar: p.title_ar, description_ar: p.description_ar, icon: p.icon, href: `/paths/${p.slug}`, badge: 'مسار' as const })),
-      ...coursesRepo.getAll().filter(c => c.is_published !== false).slice(0, perRepo)
-        .map(c => ({ id: c.id, title_ar: c.title_ar, description_ar: c.description_ar, href: `/courses/${c.slug || c.id}`, badge: 'كورس' as const })),
-    ];
-    return mixed.slice(0, limit);
   }
 
   return [];
