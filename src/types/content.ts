@@ -11,6 +11,7 @@ export interface ContentResource {
   language: string;
   is_published: boolean;
   created_at: string;
+  section_id?: string;
 }
 
 export interface ContentQuery {

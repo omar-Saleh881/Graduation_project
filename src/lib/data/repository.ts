@@ -125,8 +125,12 @@ export const pathStageItemsRepo = new LocalStorageRepository<PathStageItem>("ai_
 export const sectionsRepo = new LocalStorageRepository<PlatformSection>(SECTIONS_KEY);
 
 // Default sections if empty
-if (sectionsRepo.getAll().length === 0) {
-  sectionsRepo.create({
+// Default sections if empty or missing built-ins
+const currentSections = sectionsRepo.getAll();
+const builtInTypes: SectionTemplateType[] = ['tools', 'paths', 'articles', 'courses', 'content'];
+
+const defaultBuiltIns: Record<string, any> = {
+  tools: {
     title_ar: "دليل الأدوات الذكية",
     description_ar: "أكبر دليل عربي لأدوات AI — ابحث، قارن، واختر من بين مئات الأدوات المُصنّفة.",
     icon: "🔍",
@@ -138,8 +142,8 @@ if (sectionsRepo.getAll().length === 0) {
     is_active: true,
     cta_text: "تصفّح الأدوات",
     empty_state_text: "لا توجد أدوات منشورة حالياً"
-  });
-  sectionsRepo.create({
+  },
+  paths: {
     title_ar: "المسارات التعليمية",
     description_ar: "مسارات مُنظّمة خطوة بخطوة تغطي الكتابة، التصميم، البرمجة، والتسويق.",
     icon: "📚",
@@ -151,8 +155,8 @@ if (sectionsRepo.getAll().length === 0) {
     is_active: true,
     cta_text: "ابدأ مسارك الأول",
     empty_state_text: "لا توجد مسارات منشورة حالياً"
-  });
-  sectionsRepo.create({
+  },
+  articles: {
     title_ar: "المقالات التعليمية",
     description_ar: "مقالات عربية مبسّطة تشرح المفاهيم والأدوات بأسلوب واضح وعملي.",
     icon: "📝",
@@ -164,8 +168,42 @@ if (sectionsRepo.getAll().length === 0) {
     is_active: true,
     cta_text: "اقرأ أحدث المقالات",
     empty_state_text: "لا توجد مقالات منشورة حالياً"
-  });
-}
+  },
+  courses: {
+    title_ar: "كورسات المنصة",
+    description_ar: "دورات متكاملة تغطي مختلف جوانب الذكاء الاصطناعي من البداية حتى الاحتراف.",
+    icon: "🎓",
+    template_type: 'courses',
+    module_mode: false,
+    display_style: 'featured',
+    max_items: 6,
+    order: 4,
+    is_active: true,
+    cta_text: "تصفح الكورسات",
+    empty_state_text: "لا توجد كورسات متاحة حالياً"
+  },
+  content: {
+    title_ar: "مصادر ومحتوى خارجي",
+    description_ar: "ترشيحات لأفضل الكورسات، الفيديوهات، والمصادر العالمية الموثوقة.",
+    icon: "🔗",
+    template_type: 'content',
+    module_mode: false,
+    display_style: 'grid',
+    max_items: 6,
+    order: 5,
+    is_active: true,
+    cta_text: "استكشف المكتبة",
+    empty_state_text: "لا توجد مصادر خارجية حالياً"
+  }
+};
+
+builtInTypes.forEach(type => {
+  const exists = currentSections.find(s => s.template_type === type && !s.module_mode);
+  if (!exists) {
+    sectionsRepo.create(defaultBuiltIns[type]);
+  }
+});
+
 
 // Settings repository
 export const settingsRepo = new LocalStorageRepository<PlatformSettings>("ai_platform_settings", defaultSettings);
@@ -239,7 +277,7 @@ export const getPathWithSteps = (slug: string): LearningPathWithSteps | undefine
                 title_ar: article.title_ar,
                 description_ar: article.excerpt_ar,
                 resource_type: 'article',
-                resource_url: `/article/${article.slug}`,
+                resource_url: `/article/${article.slug || article.id}`,
                 duration_minutes: article.read_time_minutes || 0,
                 content_ar: article.content_ar
               };
@@ -422,9 +460,12 @@ export const DEFAULT_CTA_LINKS: Record<SectionTemplateType, string> = {
   paths: '/paths',
   courses: '/courses',
   articles: '/articles',
+  content: '/content',
 };
 
 export function getSectionCtaLink(section: PlatformSection): string {
+  // Always resolve to the dedicated isolated route for custom modules, ignoring legacy DB fallbacks
+  if (section.module_mode) return `/section/${section.id}`;
   if (section.cta_link) return section.cta_link;
   return DEFAULT_CTA_LINKS[section.template_type] || '/';
 }
@@ -455,7 +496,7 @@ export function getSectionItems(section: PlatformSection): SectionItem[] {
         id: a.id,
         title_ar: a.title_ar,
         description_ar: a.excerpt_ar,
-        href: `/article/${a.slug}`,
+        href: `/article/${a.slug || a.id}`,
         badge: 'مقال',
         meta: a.read_time_minutes ? `${a.read_time_minutes} دقائق` : undefined,
       }));
@@ -486,6 +527,20 @@ export function getSectionItems(section: PlatformSection): SectionItem[] {
         href: `/courses/${c.slug || c.id}`,
         badge: 'كورس',
         meta: c.level,
+      }));
+  }
+
+  if (type === 'content') {
+    return contentRepo.getAll()
+      .filter(c => c.is_published !== false && (isModule ? c.section_id === section.id : !c.section_id))
+      .slice(0, limit)
+      .map(c => ({
+        id: c.id,
+        title_ar: c.title_ar,
+        description_ar: c.description_ar,
+        href: c.url,
+        badge: 'مصدر خارجي',
+        meta: c.provider,
       }));
   }
 

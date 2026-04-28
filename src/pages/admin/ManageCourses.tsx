@@ -17,17 +17,17 @@ export default function ManageCourses() {
   const { sectionId } = useParams<{ sectionId?: string }>();
   
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [formData, setFormData] = useState({ title_ar: "", category: "", description_ar: "" });
+  const [formData, setFormData] = useState({ title_ar: "", category: "", description_ar: "", is_published: true });
 
   const loadCourses = () => {
     setCourses(
       coursesRepo.getAll()
-        .filter(c => sectionId ? c.section_id === sectionId : !c.section_id) // If undefined, it will only match global courses!
+        .filter(c => sectionId ? c.section_id === sectionId : !c.section_id)
         .sort((a,b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
     );
   };
 
-  useEffect(() => { loadCourses(); }, []);
+  useEffect(() => { loadCourses(); }, [sectionId]);
 
   const handleSave = () => {
     const slug = formData.title_ar.toLowerCase().replace(/\s+/g, '-');
@@ -37,7 +37,7 @@ export default function ManageCourses() {
       description_ar: formData.description_ar,
       slug,
       level: "beginner",
-      is_published: false,
+      is_published: formData.is_published,
       created_at: new Date().toISOString(),
       section_id: sectionId
     });
@@ -46,6 +46,12 @@ export default function ManageCourses() {
     loadCourses();
     const basePath = sectionId ? `/admin/sections/${sectionId}/courses` : `/admin/courses`;
     navigate(`${basePath}/${newCourse.id}/builder`);
+  };
+
+  const togglePublish = (id: string, current: boolean) => {
+    coursesRepo.update(id, { is_published: !current });
+    loadCourses();
+    toast({ title: !current ? "تم نشر الكورس" : "تم تحويل الكورس لمسودة" });
   };
 
   const handleDelete = (id: string) => {
@@ -66,10 +72,10 @@ export default function ManageCourses() {
         
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="gap-2"><Plus className="h-4 w-4"/> إنشاء كورس منفصل</Button>
+            <Button className="gap-2" onClick={() => setFormData({ title_ar: "", category: "عام", description_ar: "", is_published: true })}><Plus className="h-4 w-4"/> إنشاء كورس منفصل</Button>
           </DialogTrigger>
           <DialogContent>
-            <DialogHeader><DialogTitle>تسجيل كورس مسودّة</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle>تسجيل كورس جديد</DialogTitle></DialogHeader>
             <div className="space-y-4 pt-4">
               <div className="space-y-2">
                 <Label>عنوان الكورس</Label>
@@ -83,6 +89,17 @@ export default function ManageCourses() {
                 <Label>وصف مبسط</Label>
                 <Input value={formData.description_ar} onChange={e => setFormData({...formData, description_ar: e.target.value})} />
               </div>
+              <div className="space-y-2">
+                <Label>الحالة</Label>
+                <select 
+                  className="w-full h-9 rounded-md border border-input bg-background px-3 text-sm"
+                  value={formData.is_published ? "true" : "false"}
+                  onChange={e => setFormData({...formData, is_published: e.target.value === "true"})}
+                >
+                  <option value="true">منشور (يظهر للعامة)</option>
+                  <option value="false">مسودة (للمعاينة فقط)</option>
+                </select>
+              </div>
               <Button onClick={handleSave} className="w-full">موافق، افتح الباني</Button>
             </div>
           </DialogContent>
@@ -91,9 +108,18 @@ export default function ManageCourses() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {courses.map(course => (
-          <Card key={course.id} className="group relative">
-            <CardContent className="p-6">
-              <h3 className="font-bold text-xl mb-2">{course.title_ar}</h3>
+          <Card key={course.id} className="group relative flex flex-col">
+            <CardContent className="p-6 flex-1 flex flex-col">
+              <div className="flex justify-between items-start mb-2">
+                <h3 className="font-bold text-xl">{course.title_ar}</h3>
+                <Badge 
+                  variant={course.is_published ? "default" : "secondary"}
+                  className="cursor-pointer"
+                  onClick={() => togglePublish(course.id, !!course.is_published)}
+                >
+                  {course.is_published ? "منشور" : "مسودة"}
+                </Badge>
+              </div>
               <p className="text-sm text-muted-foreground mb-4 line-clamp-2">{course.description_ar}</p>
               
               <div className="flex items-center justify-between border-t border-border pt-4 mt-auto">

@@ -2,7 +2,8 @@ export type SectionTemplateType =
   | 'tools'
   | 'paths'
   | 'courses'
-  | 'articles';
+  | 'articles'
+  | 'content';
 
 export type SectionDisplayStyle = 'grid' | 'list' | 'cards' | 'featured';
 

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Plus, Search, Edit, Trash2 } from "lucide-react";
+import { useParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,6 +16,7 @@ const ManageContent = () => {
   const [content, setContent] = useState<ContentResource[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const { toast } = useToast();
+  const { sectionId } = useParams<{ sectionId?: string }>();
   const queryClient = useQueryClient();
   
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -24,13 +26,17 @@ const ManageContent = () => {
   });
 
   const loadContent = () => {
-    setContent(contentRepo.getAll().sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
+    setContent(
+      contentRepo.getAll()
+        .filter(c => sectionId ? c.section_id === sectionId : !c.section_id)
+        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+    );
     queryClient.invalidateQueries({ queryKey: ["content"] });
   };
 
   useEffect(() => {
     loadContent();
-  }, []);
+  }, [sectionId]);
 
   const handleDelete = (id: string) => {
     if (window.confirm("هل أنت متأكد من حذف هذا المحتوى؟")) {
@@ -74,7 +80,8 @@ const ManageContent = () => {
         provider: "مستقل",
         is_free: true,
         language: "عربي",
-        created_at: new Date().toISOString()
+        created_at: new Date().toISOString(),
+        section_id: sectionId
       });
       toast({ title: "تمت الإضافة بنجاح" });
     }

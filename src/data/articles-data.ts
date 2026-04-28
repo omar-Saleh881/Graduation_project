@@ -30,7 +30,7 @@ export function getAllArticles(query: { search?: string; category?: string; page
 }
 
 export function getArticleBySlug(slug: string): Article | null {
-  return articlesRepo.getAll().find((a) => a.slug === slug && a.is_published) ?? null;
+  return articlesRepo.getAll().find((a) => (a.slug === slug || a.id === slug) && a.is_published) ?? null;
 }
 
 export function getArticleCategories(): string[] {

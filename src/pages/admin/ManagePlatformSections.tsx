@@ -23,6 +23,7 @@ const templateTypeLabels: Record<string, string> = {
   paths: "📚 المسارات التعليمية",
   courses: "🎓 الكورسات",
   articles: "📝 المقالات",
+  content: "🔗 المصادر الخارجية",
 };
 
 const displayStyleLabels: Record<SectionDisplayStyle, string> = {
@@ -63,15 +64,15 @@ export default function ManagePlatformSections() {
   const suggestedCtaLink = (type: SectionTemplateType) => DEFAULT_CTA_LINKS[type] ?? '/';
 
   const handleTemplateTypeChange = (v: SectionTemplateType) => {
-    const ctaLink = formData.cta_link || suggestedCtaLink(v);
-    setFormData(prev => ({ ...prev, template_type: v, cta_link: ctaLink }));
+    setFormData(prev => ({ ...prev, template_type: v }));
   };
 
   const handleOpenAdd = () => {
     setEditingSection(null);
     setFormData({
       ...blankForm(sections.length + 1),
-      module_mode: true
+      module_mode: true,
+      cta_link: ""
     });
     setIsOpen(true);
   };
@@ -88,12 +89,13 @@ export default function ManagePlatformSections() {
       return;
     }
 
-    let cta_link = formData.cta_link || "";
-    if (!cta_link) {
-      cta_link = DEFAULT_CTA_LINKS[formData.template_type!] || "/";
-    }
+    const payload = { ...formData } as PlatformSection;
 
-    const payload = { ...formData, cta_link } as PlatformSection;
+    // Fix: If it's a generic un-scoped section, and cta_link is empty, we can fallback.
+    // BUT if it's module_mode, it must remain empty so repository.ts generates /section/:id
+    if (!payload.module_mode && !payload.cta_link) {
+       payload.cta_link = DEFAULT_CTA_LINKS[payload.template_type] || "/";
+    }
 
     if (editingSection) {
       sectionsRepo.update(editingSection.id, payload);
